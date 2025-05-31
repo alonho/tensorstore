@@ -53,6 +53,30 @@ struct FileIoSyncResource
   }
 };
 
+/// When set, the "file" kvstore opens files with O_DIRECT which bypasses
+/// the page cache and increases performance by avoiding contention and 
+/// an extra memory copy.
+/// O_DIRECT implies the same semantics of 'file_io_sync' so these options
+/// are mutually exclusive.
+struct FileIoDirectResource
+    : public internal::ContextResourceTraits<FileIoDirectResource> {
+  constexpr static bool config_only = true;
+  static constexpr char id[] = "file_io_direct";
+  using Spec = bool;
+  using Resource = Spec;
+  static Spec Default() { return false; }
+  static constexpr auto JsonBinder() {
+    return internal_json_binding::DefaultBinder<>;
+  }
+  static Result<Resource> Create(
+      Spec v, internal::ContextResourceCreationContext context) {
+    return v;
+  }
+  static Spec GetSpec(Resource v, const internal::ContextSpecBuilder& builder) {
+    return v;
+  }
+};
+
 /// When set, the "file" kvstore uses ::mmap to read files.
 struct FileIoMemmapResource
     : public internal::ContextResourceTraits<FileIoMemmapResource> {

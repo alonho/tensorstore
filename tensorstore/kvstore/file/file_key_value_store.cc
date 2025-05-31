@@ -205,12 +205,13 @@ bool IsFileKvstorePathValid(std::string_view path) {
 struct FileKeyValueStoreSpecData {
   Context::Resource<internal::FileIoConcurrencyResource> file_io_concurrency;
   Context::Resource<FileIoSyncResource> file_io_sync;
+  Context::Resource<FileIoDirectResource> file_io_direct;
   Context::Resource<FileIoMemmapResource> file_io_memmap;
   Context::Resource<FileIoLockingResource> file_io_locking;
 
   constexpr static auto ApplyMembers = [](auto& x, auto f) {
-    return f(x.file_io_concurrency, x.file_io_sync, x.file_io_memmap,
-             x.file_io_locking);
+    return f(x.file_io_concurrency, x.file_io_sync, x.file_io_direct,
+             x.file_io_memmap, x.file_io_locking);
   };
 
   // TODO(jbms): Storing a UNIX path as a JSON string presents a challenge
@@ -234,6 +235,8 @@ struct FileKeyValueStoreSpecData {
           jb::Projection<&FileKeyValueStoreSpecData::file_io_concurrency>()),
       jb::Member(FileIoSyncResource::id,
                  jb::Projection<&FileKeyValueStoreSpecData::file_io_sync>()),
+      jb::Member(FileIoDirectResource::id,
+                 jb::Projection<&FileKeyValueStoreSpecData::file_io_direct>()),
       jb::Member(FileIoMemmapResource::id,
                  jb::Projection<&FileKeyValueStoreSpecData::file_io_memmap>()),
       jb::Member(FileIoLockingResource::id,
@@ -296,6 +299,7 @@ class FileKeyValueStore
   }
 
   bool sync() const { return *spec_.file_io_sync; }
+  bool direct() const { return *spec_.file_io_direct; }
   bool memmap() const { return *spec_.file_io_memmap; }
 
   FileIoLockingResource::Spec file_io_locking() const {
@@ -622,6 +626,7 @@ struct WriteTask {
   absl::Cord value;
   kvstore::WriteOptions options;
   bool sync;
+  bool direct;
   FileIoLockingResource::Spec file_io_locking;
 
   Result<TimestampedStorageGeneration> operator()() const {
@@ -630,6 +635,7 @@ struct WriteTask {
     r.time = absl::Now();
     TENSORSTORE_ASSIGN_OR_RETURN(auto dir_fd, OpenParentDirectory(full_path));
 
+    OpenFlags extra_open_flags = direct ? OpenFlags::Direct : OpenFlags::NoFlags;
     TENSORSTORE_ASSIGN_OR_RETURN(
         auto lock_helper, [&]() -> Result<internal_os::FileLock> {
           switch (file_io_locking.mode) {
@@ -640,13 +646,16 @@ struct WriteTask {
               uint64_t x = absl::Uniform<uint64_t>(rng);
               return AcquireExclusiveFile(
                   absl::StrCat(full_path, "_", absl::Hex(x), kLockSuffix),
-                  absl::ZeroDuration());
+                  absl::ZeroDuration(),
+                  extra_open_flags);
             }
             case FileIoLockingResource::LockingMode::os:
-              return AcquireFileLock(absl::StrCat(full_path, kLockSuffix));
+              return AcquireFileLock(absl::StrCat(full_path, kLockSuffix),
+                                     extra_open_flags);
             case FileIoLockingResource::LockingMode::lockfile:
               return AcquireExclusiveFile(absl::StrCat(full_path, kLockSuffix),
-                                          file_io_locking.acquire_timeout);
+                                          file_io_locking.acquire_timeout,
+                                          extra_open_flags);
           }
           ABSL_UNREACHABLE();
         }());
@@ -712,6 +721,7 @@ struct DeleteTask {
   std::string full_path;
   kvstore::WriteOptions options;
   bool sync;
+  bool direct;
   FileIoLockingResource::Spec file_io_locking;
 
   Result<TimestampedStorageGeneration> operator()() const {
@@ -726,10 +736,12 @@ struct DeleteTask {
       TENSORSTORE_ASSIGN_OR_RETURN(
           lock_helper,
           AcquireExclusiveFile(absl::StrCat(full_path, kLockSuffix),
-                               file_io_locking.acquire_timeout));
+                               file_io_locking.acquire_timeout,
+                               OpenFlags::NoFlags));
     } else if (file_io_locking.mode == FileIoLockingResource::LockingMode::os) {
       TENSORSTORE_ASSIGN_OR_RETURN(
-          lock_helper, AcquireFileLock(absl::StrCat(full_path, kLockSuffix)));
+          lock_helper, AcquireFileLock(absl::StrCat(full_path, kLockSuffix),
+                                       OpenFlags::NoFlags));
     }
 
     bool fsync_directory = false;
@@ -780,10 +792,10 @@ Future<TimestampedStorageGeneration> FileKeyValueStore::Write(
   if (value) {
     return MapFuture(executor(),
                      WriteTask{std::move(key), std::move(*value),
-                               std::move(options), sync(), file_io_locking()});
+                               std::move(options), sync(), direct(), file_io_locking()});
   } else {
     return MapFuture(executor(), DeleteTask{std::move(key), std::move(options),
-                                            sync(), file_io_locking()});
+                                            sync(), direct(), file_io_locking()});
   }
 }
 
@@ -917,6 +929,8 @@ Result<kvstore::Spec> ParseFileUrl(std::string_view url) {
       Context::Resource<internal::FileIoConcurrencyResource>::DefaultSpec();
   driver_spec->data_.file_io_sync =
       Context::Resource<FileIoSyncResource>::DefaultSpec();
+  driver_spec->data_.file_io_direct =
+      Context::Resource<FileIoDirectResource>::DefaultSpec();
   driver_spec->data_.file_io_memmap =
       Context::Resource<FileIoMemmapResource>::DefaultSpec();
   driver_spec->data_.file_io_locking =

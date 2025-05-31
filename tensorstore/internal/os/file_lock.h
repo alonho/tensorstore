@@ -36,7 +36,7 @@ class FileLock;
 ///
 /// NOTE: Stale lock files may be left behind if the process crashes; this
 /// is acceptable as os-level advisory locks are dropped on process exit.
-Result<FileLock> AcquireFileLock(std::string lock_path);
+Result<FileLock> AcquireFileLock(std::string lock_path, OpenFlags extra_open_flags);
 
 /// Opens a file in exclusive mode to use as a lock.
 ///
@@ -45,7 +45,9 @@ Result<FileLock> AcquireFileLock(std::string lock_path);
 /// NOTE: Stale lock files may be left behind if the process crashes; this
 /// will cause the write to fail and will need to be cleaned up manually.
 Result<FileLock> AcquireExclusiveFile(std::string lock_path,
-                                      absl::Duration timeout);
+                                      absl::Duration timeout,
+                                      OpenFlags extra_open_flags);
+
 /// FileLock wraps a lock file.
 /// Caller must call `Delete()` or `Close()` before FileLock is destroyed.
 class FileLock {
@@ -82,8 +84,8 @@ class FileLock {
   void Close() &&;
 
  private:
-  friend Result<FileLock> AcquireFileLock(std::string);
-  friend Result<FileLock> AcquireExclusiveFile(std::string, absl::Duration);
+  friend Result<FileLock> AcquireFileLock(std::string, OpenFlags extra_open_flags);
+  friend Result<FileLock> AcquireExclusiveFile(std::string, absl::Duration, OpenFlags extra_open_flags);
 
   inline void Unlock(FileDescriptor fd) {
     if (unlock_fn_) {

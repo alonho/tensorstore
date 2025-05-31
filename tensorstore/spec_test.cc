@@ -316,6 +316,7 @@ TEST(SpecTest, SetContextAndKvstoreIncludeDefaults) {
                {"path", "/tmp/"},
                {"file_io_concurrency", {"file_io_concurrency#a"}},
                {"file_io_sync", {"file_io_sync"}},
+               {"file_io_direct", {"file_io_direct"}},
                {"file_io_locking", {"file_io_locking"}},
                {"file_io_memmap", {"file_io_memmap"}},
            }},
@@ -333,6 +334,7 @@ TEST(SpecTest, SetContextAndKvstoreIncludeDefaults) {
                {"file_io_locking", ::nlohmann::json::object_t()},
                {"file_io_memmap", false},
                {"file_io_sync", true},
+               {"file_io_direct", false},
            }},
       })));
 }
@@ -366,6 +368,7 @@ TEST(SpecTest, SetContextAndKvstore) {
                {"path", "/tmp/"},
                {"file_io_concurrency", {"file_io_concurrency#a"}},
                {"file_io_sync", {"file_io_sync"}},
+               {"file_io_direct", {"file_io_direct"}},
                {"file_io_locking", {"file_io_locking"}},
                {"file_io_memmap", {"file_io_memmap"}},
            }},
@@ -383,6 +386,7 @@ TEST(SpecTest, SetContextAndKvstore) {
                {"file_io_concurrency#a", {{"limit", 5}}},
                {"file_io_locking", ::nlohmann::json::object_t()},
                {"file_io_sync", true},
+               {"file_io_direct", false},
                {"file_io_memmap", false},
            }},
       })));

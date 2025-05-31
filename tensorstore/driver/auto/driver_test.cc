@@ -118,6 +118,7 @@ TEST(AutoTest, UnbindContextSimple) {
                 {"file_io_locking", ::nlohmann::json::object_t()},
                 {"file_io_memmap", false},
                 {"file_io_sync", true},
+                {"file_io_direct", false},
                 {"ocdbt_coordinator", ::nlohmann::json::object_t()},
             }}})));
 }
@@ -155,6 +156,7 @@ TEST(AutoTest, UnbindContext1) {
                 {"file_io_locking", ::nlohmann::json::object_t()},
                 {"file_io_memmap", false},
                 {"file_io_sync", true},
+                {"file_io_direct", false},
                 {"ocdbt_coordinator", ::nlohmann::json::object_t()},
             }}})));
 }

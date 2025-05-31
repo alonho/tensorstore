@@ -417,6 +417,7 @@ TEST(FileKeyValueStoreTest, SpecRoundtripSync) {
        {
            {"file_io_concurrency", ::nlohmann::json::object_t()},
            {"file_io_memmap", false},
+           {"file_io_direct", false},
            {"file_io_locking", {{"mode", "lockfile"}}},
        }},
   };

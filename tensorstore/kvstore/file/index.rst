@@ -20,6 +20,8 @@ machines to a network filesystem is also safe.
 
 .. json:schema:: Context.file_io_sync
 
+.. json:schema:: Context.file_io_direct
+
 .. json:schema:: Context.file_io_locking
 
 .. json:schema:: Context.file_io_memmap
@@ -38,6 +40,19 @@ achieved by setting :json:schema:`Context.file_io_sync` to :json:``false``.
    {"driver": "file",
     "path": "/local/path/",
     "file_io_sync": false}
+
+Bypassing the page-cache
+------------------------
+
+By default, data that is read/written is buffered through the page cache.
+Writing to the Linux page caches comes with a cost and is limited to 2-3GBps,
+This creates a throughput limit and an extra memory copy for every read/write 
+operation.
+
+The page cache can accelerate access to small data sets that fit in memory.
+But for larger ones, there's a benefit from opening files with O_DIRECT
+which bypasses the page cache. 
+This is achieved by setting :json:schema:`Context.file_io_direct` to :json:``true``.
 
 Limitations
 -----------

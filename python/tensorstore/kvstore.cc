@@ -333,6 +333,7 @@ Example:
     KvStore({
       'context': {
         'file_io_concurrency': {},
+        'file_io_direct': False,
         'file_io_locking': {},
         'file_io_memmap': False,
         'file_io_sync': True,
@@ -344,6 +345,7 @@ Example:
     KvStore({
       'context': {
         'file_io_concurrency': {},
+        'file_io_direct': False,
         'file_io_locking': {},
         'file_io_memmap': False,
         'file_io_sync': True,
@@ -373,6 +375,7 @@ Example:
     KvStore({
       'context': {
         'file_io_concurrency': {},
+        'file_io_direct': False,
         'file_io_locking': {},
         'file_io_memmap': False,
         'file_io_sync': True,
@@ -384,6 +387,7 @@ Example:
     KvStore({
       'context': {
         'file_io_concurrency': {},
+        'file_io_direct': False,
         'file_io_locking': {},
         'file_io_memmap': False,
         'file_io_sync': True,
@@ -1173,6 +1177,7 @@ Example:
     KvStore({
       'context': {
         'file_io_concurrency': {},
+        'file_io_direct': False,
         'file_io_locking': {},
         'file_io_memmap': False,
         'file_io_sync': True,
@@ -1195,6 +1200,7 @@ Example:
   KvStore({
     'context': {
       'file_io_concurrency': {},
+      'file_io_direct': False,
       'file_io_locking': {},
       'file_io_memmap': False,
       'file_io_sync': True,
@@ -1206,6 +1212,7 @@ Example:
   KvStore({
     'context': {
       'file_io_concurrency': {},
+      'file_io_direct': False,
       'file_io_locking': {},
       'file_io_memmap': False,
       'file_io_sync': True,
@@ -1417,6 +1424,7 @@ Example:
   {'context': {},
    'driver': 'file',
    'file_io_concurrency': 'file_io_concurrency',
+   'file_io_direct': 'file_io_direct',
    'file_io_locking': 'file_io_locking',
    'file_io_memmap': 'file_io_memmap',
    'file_io_sync': 'file_io_sync',

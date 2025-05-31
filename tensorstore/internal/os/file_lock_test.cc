@@ -41,6 +41,7 @@ using ::tensorstore::IsOkAndHolds;
 using ::tensorstore::MatchesStatus;
 using ::tensorstore::internal_os::AcquireExclusiveFile;
 using ::tensorstore::internal_os::AcquireFileLock;
+using ::tensorstore::internal_os::OpenFlags;
 using ::tensorstore::internal_os::FileDescriptorTraits;
 using ::tensorstore::internal_os::FileLock;
 using ::tensorstore::internal_testing::ScopedTemporaryDirectory;
@@ -50,7 +51,7 @@ namespace {
 TEST(AcquireFileLockTest, Basic) {
   ScopedTemporaryDirectory tempdir;
   std::string lock_path = tempdir.path() + "/foo.txt.__lock";
-  auto lock = AcquireFileLock(lock_path);
+  auto lock = AcquireFileLock(lock_path, OpenFlags::NoFlags);
   EXPECT_THAT(lock, IsOk());
   EXPECT_NE(lock->fd(), FileDescriptorTraits::Invalid());
 
@@ -68,7 +69,7 @@ TEST(AcquireFileLockTest, FileExists) {
     std::ofstream x(lock_path);
   }
 
-  auto lock = AcquireFileLock(lock_path);
+  auto lock = AcquireFileLock(lock_path, OpenFlags::NoFlags);
   EXPECT_THAT(lock, IsOk());
   EXPECT_NE(lock->fd(), FileDescriptorTraits::Invalid());
   std::move(lock).value().Close();
@@ -78,7 +79,8 @@ TEST(AcquireExclusiveFileTest, Basic) {
   /// Lock file does not exist.
   ScopedTemporaryDirectory tempdir;
   std::string lock_path = tempdir.path() + "/foo.txt.__lock";
-  auto lock = AcquireExclusiveFile(lock_path, absl::Seconds(1));
+  auto lock = AcquireExclusiveFile(lock_path, absl::Seconds(1),
+                                   OpenFlags::NoFlags);
   EXPECT_THAT(lock, IsOk());
   EXPECT_NE(lock->fd(), FileDescriptorTraits::Invalid());
 
@@ -100,7 +102,8 @@ TEST(AcquireExclusiveFileTest, FileExistsNotAcquired) {
   }
 
   // The lock is stale, so it should be deleted.
-  auto lock = AcquireExclusiveFile(lock_path, absl::Milliseconds(100));
+  auto lock = AcquireExclusiveFile(lock_path, absl::Milliseconds(100),
+                                   OpenFlags::NoFlags);
   EXPECT_THAT(lock, MatchesStatus(absl::StatusCode::kDeadlineExceeded));
 }
 

@@ -66,11 +66,11 @@ void FileLock::Close() && {
   FileDescriptorTraits::Close(fd);
 }
 
-Result<FileLock> AcquireFileLock(std::string lock_path) {
+Result<FileLock> AcquireFileLock(std::string lock_path, OpenFlags extra_open_flags) {
   using private_t = FileLock::private_t;
   TENSORSTORE_ASSIGN_OR_RETURN(
       UniqueFileDescriptor fd,
-      OpenFileWrapper(lock_path, OpenFlags::DefaultWrite));
+      OpenFileWrapper(lock_path, OpenFlags::DefaultWrite | extra_open_flags));
   FileInfo a, b;
   FileInfo* info = &a;
 
@@ -113,7 +113,8 @@ Result<FileLock> AcquireFileLock(std::string lock_path) {
 
 /* static */
 Result<FileLock> AcquireExclusiveFile(std::string lock_path,
-                                      absl::Duration timeout) {
+                                      absl::Duration timeout,
+                                      OpenFlags extra_open_flags) {
   using private_t = FileLock::private_t;
 
   FileInfo info;
@@ -122,7 +123,8 @@ Result<FileLock> AcquireExclusiveFile(std::string lock_path,
   // Determine whether the lock file is stale.
   auto detect_stale_lock = [&]() mutable {
     auto read_fd = OpenFileWrapper(
-        lock_path, OpenFlags::OpenReadOnly | OpenFlags::CloseOnExec);
+        lock_path, OpenFlags::OpenReadOnly | OpenFlags::CloseOnExec |
+        extra_open_flags);
     if (read_fd.ok()) {
       TENSORSTORE_RETURN_IF_ERROR(GetFileInfo(read_fd->get(), &info));
       if (!IsRegularFile(info)) {
@@ -150,7 +152,8 @@ Result<FileLock> AcquireExclusiveFile(std::string lock_path,
 
     auto fd = OpenFileWrapper(
         lock_path, OpenFlags::Create | OpenFlags::Exclusive |
-                       OpenFlags::OpenReadWrite | OpenFlags::CloseOnExec);
+                      OpenFlags::OpenReadWrite | OpenFlags::CloseOnExec |
+                      extra_open_flags);
     if (fd.ok()) {
       TENSORSTORE_RETURN_IF_ERROR(GetFileInfo(fd->get(), &info));
       return FileLock(private_t{}, std::move(lock_path), fd->release(),
