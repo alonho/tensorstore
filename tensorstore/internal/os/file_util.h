@@ -113,6 +113,7 @@ Result<MemoryRegion> MemmapFileReadOnly(FileDescriptor fd, size_t offset,
 
 // Restricted subset of POSIX open flags.
 enum class OpenFlags : int {
+  NoFlags = 0,
   OpenReadOnly = O_RDONLY,
   OpenWriteOnly = O_WRONLY,
   OpenReadWrite = O_RDWR,
@@ -120,6 +121,7 @@ enum class OpenFlags : int {
   Append = O_APPEND,
   Exclusive = O_EXCL,
   CloseOnExec = O_CLOEXEC,
+  Direct = O_DIRECT,
   ReadWriteMask = O_RDONLY | O_WRONLY | O_RDWR,
 
   DefaultRead = O_RDONLY | O_CLOEXEC,

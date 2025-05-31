@@ -137,6 +137,12 @@ TENSORSTORE_GLOBAL_INITIALIZER {
           return {{"driver", "file"}, {"path", path}, {"file_io_sync", false}};
         },
         params);
+    register_with_spec(
+        "Direct",
+        [](std::string path) -> ::nlohmann::json {
+          return {{"driver", "file"}, {"path", path}, {"file_io_direct", true}};
+        },
+        params);
     {
       auto p = params;
       p.value_size = 256 * 1024;
@@ -417,6 +423,7 @@ TEST(FileKeyValueStoreTest, SpecRoundtripSync) {
        {
            {"file_io_concurrency", ::nlohmann::json::object_t()},
            {"file_io_memmap", false},
+           {"file_io_direct", true},
            {"file_io_locking", {{"mode", "lockfile"}}},
        }},
   };

@@ -41,6 +41,7 @@ using ::tensorstore::IsOkAndHolds;
 using ::tensorstore::MatchesStatus;
 using ::tensorstore::internal_os::AcquireExclusiveFile;
 using ::tensorstore::internal_os::AcquireFileLock;
+using ::tensorstore::internal_os::OpenFlags;
 using ::tensorstore::internal_os::FileDescriptorTraits;
 using ::tensorstore::internal_os::FileLock;
 using ::tensorstore::internal_testing::ScopedTemporaryDirectory;

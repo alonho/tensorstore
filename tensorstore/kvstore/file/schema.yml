@@ -19,6 +19,10 @@ allOf:
       $ref: ContextResource
       description: |-
         Specifies or references a previously defined `Context.file_io_sync`.
+    file_io_direct:
+      $ref: ContextResource
+      description: |-
+        Specifies or references a previously defined `Context.file_io_direct`.
     file_io_memmap:
       $ref: ContextResource
       description: |-
@@ -92,6 +96,18 @@ definitions:
       make write operations faster.
     type: boolean
     default: true
+  file_io_direct:
+    $id: Context.file_io_direct
+    title: |
+      Specifies whether files should be opened with O_DIRECT.
+    description: |-
+      When set to ``true``, the "file" kvstore opens files with O_DIRECT which bypasses
+      the page cache and increases performance by avoiding contention and 
+      an extra memory copy.
+      O_DIRECT implies the same semantics of 'file_io_sync' so these options
+      are mutually exclusive.
+    type: boolean
+    default: false
   file_io_memmap:
     $id: Context.file_io_memmap
     title: |
